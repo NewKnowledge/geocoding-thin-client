@@ -255,16 +255,16 @@ class goat(TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
                 lambda val: re.sub(r"\s*&\s*", r" and ", val)
             )
             for location in inputs_cleaned:
-                cache_ret = goat_cache.get(location)
+                cache_ret = self.goat_cache.get(location)
                 row_data = []
                 if cache_ret == -1:
                     r = requests.get(address + "api?q=" + location)
                     tmp = self._decoder.decode(r.text)
                     if self._is_geocoded(tmp):
                         row_data = tmp["features"][0]["geometry"]["coordinates"]
-                        goat_cache.set(location, str(row_data))
+                        self.goat_cache.set(location, str(row_data))
                     else:
-                        goat_cache.set(location, "[float('nan'), float('nan')]")
+                        self.goat_cache.set(location, "[float('nan'), float('nan')]")
                 else:
                     # cache_ret is [longitude, latitude]
                     row_data = [eval(cache_ret)[0], eval(cache_ret)[1]]

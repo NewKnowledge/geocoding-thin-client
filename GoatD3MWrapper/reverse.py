@@ -238,7 +238,7 @@ class reverse_goat(TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
         for i, ith_column in enumerate(target_columns):
             j = 0
             for longlat in inputs[ith_column]:
-                cache_ret = goat_cache.get(longlat)
+                cache_ret = self.goat_cache.get(longlat)
                 row_data = []
                 if cache_ret == -1:
                     r = requests.get(
@@ -266,7 +266,7 @@ class reverse_goat(TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
                         row_data = tmp["features"][0]["properties"][
                             self.hyperparams["geocoding_resolution"]
                         ]
-                    goat_cache.set(longlat, row_data)
+                    self.goat_cache.set(longlat, row_data)
                 else:
                     row_data = cache_ret
 
