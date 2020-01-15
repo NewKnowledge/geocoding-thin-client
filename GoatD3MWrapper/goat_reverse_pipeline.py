@@ -33,10 +33,10 @@ step_1.add_argument(
 step_1.add_output("produce")
 pipeline_description.add_step(step_1)
 
-# Step 2: column_parser
+# Step 2: column profiler
 step_2 = PrimitiveStep(
     primitive=index.get_primitive(
-        "d3m.primitives.data_transformation.column_parser.Common"
+        "d3m.primitives.schema_discovery.profiler.Common"
     )
 )
 step_2.add_argument(
@@ -47,44 +47,36 @@ step_2.add_argument(
 step_2.add_output("produce")
 pipeline_description.add_step(step_2)
 
-# Step 4: DISTIL/NK goat
+# Step 3: column_parser
 step_3 = PrimitiveStep(
-    primitive=index.get_primitive("d3m.primitives.data_cleaning.geocoding.Goat_reverse")
+    primitive=index.get_primitive(
+        "d3m.primitives.data_transformation.column_parser.Common"
+    )
 )
 step_3.add_argument(
     name="inputs",
     argument_type=ArgumentType.CONTAINER,
     data_reference="steps.2.produce",
 )
-step_3.add_hyperparameter(name="cache_size", argument_type=ArgumentType.VALUE, data=2000)
 step_3.add_output("produce")
 pipeline_description.add_step(step_3)
 
-# Step 5: XG Boost clf
+# Step 4: DISTIL/NK goat
 step_4 = PrimitiveStep(
-    primitive=index.get_primitive("d3m.primitives.classification.xgboost_gbtree.Common")
+    primitive=index.get_primitive("d3m.primitives.data_cleaning.geocoding.Goat_reverse")
 )
 step_4.add_argument(
     name="inputs",
     argument_type=ArgumentType.CONTAINER,
     data_reference="steps.3.produce",
 )
-step_4.add_argument(
-    name="outputs",
-    argument_type=ArgumentType.CONTAINER,
-    data_reference="steps.3.produce",
-)
+step_4.add_hyperparameter(name="cache_size", argument_type=ArgumentType.VALUE, data=2000)
 step_4.add_output("produce")
-step_4.add_hyperparameter(
-    name="return_result", argument_type=ArgumentType.VALUE, data="replace"
-)
 pipeline_description.add_step(step_4)
 
-# Step :6 construct output
+# Step 5: XG Boost clf
 step_5 = PrimitiveStep(
-    primitive=index.get_primitive(
-        "d3m.primitives.data_transformation.construct_predictions.Common"
-    )
+    primitive=index.get_primitive("d3m.primitives.classification.xgboost_gbtree.Common")
 )
 step_5.add_argument(
     name="inputs",
@@ -92,16 +84,38 @@ step_5.add_argument(
     data_reference="steps.4.produce",
 )
 step_5.add_argument(
+    name="outputs",
+    argument_type=ArgumentType.CONTAINER,
+    data_reference="steps.4.produce",
+)
+step_5.add_output("produce")
+step_5.add_hyperparameter(
+    name="return_result", argument_type=ArgumentType.VALUE, data="replace"
+)
+pipeline_description.add_step(step_5)
+
+# Step :6 construct output
+step_6 = PrimitiveStep(
+    primitive=index.get_primitive(
+        "d3m.primitives.data_transformation.construct_predictions.Common"
+    )
+)
+step_6.add_argument(
+    name="inputs",
+    argument_type=ArgumentType.CONTAINER,
+    data_reference="steps.5.produce",
+)
+step_6.add_argument(
     name="reference",
     argument_type=ArgumentType.CONTAINER,
     data_reference="steps.1.produce",
 )
-step_5.add_output("produce")
-pipeline_description.add_step(step_5)
+step_6.add_output("produce")
+pipeline_description.add_step(step_6)
 
 # Final Output
 pipeline_description.add_output(
-    name="output predictions", data_reference="steps.5.produce"
+    name="output predictions", data_reference="steps.6.produce"
 )
 
 # Output json pipeline
